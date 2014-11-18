@@ -1,5 +1,6 @@
 <?php namespace Illuminate\Foundation\Console;
 
+use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
@@ -36,6 +37,8 @@ class Kernel implements KernelContract {
 	protected $bootstrappers = [
 		'Illuminate\Foundation\Bootstrap\DetectEnvironment',
 		'Illuminate\Foundation\Bootstrap\LoadConfiguration',
+		'Illuminate\Foundation\Bootstrap\ConfigureLogging',
+		'Illuminate\Foundation\Bootstrap\HandleExceptions',
 		'Illuminate\Foundation\Bootstrap\RegisterFacades',
 		'Illuminate\Foundation\Bootstrap\SetRequestForConsole',
 		'Illuminate\Foundation\Bootstrap\RegisterProviders',
@@ -84,6 +87,18 @@ class Kernel implements KernelContract {
 	}
 
 	/**
+	 * Get all of the commands registered with the console.
+	 *
+	 * @return array
+	 */
+	public function all()
+	{
+		$this->bootstrap();
+
+		return $this->getArtisan()->all();
+	}
+
+	/**
 	 * Get the output for the last run command.
 	 *
 	 * @return string
@@ -104,7 +119,7 @@ class Kernel implements KernelContract {
 	{
 		if ( ! $this->app->hasBeenBootstrapped())
 		{
-			$this->app->bootstrapWith($this->bootstrappers);
+			$this->app->bootstrapWith($this->bootstrappers());
 		}
 
 		$this->app->loadDeferredProviders();
@@ -119,10 +134,44 @@ class Kernel implements KernelContract {
 	{
 		if (is_null($this->artisan))
 		{
-			return $this->artisan = new Artisan($this->app, $this->events);
+			return $this->artisan = (new Artisan($this->app, $this->events))
+								->resolveCommands($this->commands);
 		}
 
 		return $this->artisan;
+	}
+
+	/**
+	 * Get the bootstrap classes for the application.
+	 *
+	 * @return array
+	 */
+	protected function bootstrappers()
+	{
+		return $this->bootstrappers;
+	}
+
+	/**
+	 * Report the exception to the exception handler.
+	 *
+	 * @param  \Exception  $e
+	 * @return void
+	 */
+	protected function reportException(Exception $e)
+	{
+		$this->app['Illuminate\Contracts\Debug\ExceptionHandler']->report($e);
+	}
+
+	/**
+	 * Report the exception to the exception handler.
+	 *
+	 * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+	 * @param  \Exception  $e
+	 * @return void
+	 */
+	protected function renderException($output, Exception $e)
+	{
+		$this->app['Illuminate\Contracts\Debug\ExceptionHandler']->renderForConsole($output, $e);
 	}
 
 }

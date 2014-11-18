@@ -263,9 +263,16 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function environment()
 	{
-		if (count(func_get_args()) > 0)
+		if (func_num_args() > 0)
 		{
-			return in_array($this['env'], func_get_args());
+			if (is_array(func_get_arg(0)))
+			{
+				return in_array($this['env'], func_get_arg(0));
+			}
+			else
+			{
+				return in_array($this['env'], func_get_args());
+			}
 		}
 
 		return $this['env'];
@@ -773,7 +780,6 @@ class Application extends Container implements ApplicationContract {
 			'cache.store'    => ['Illuminate\Cache\Repository', 'Illuminate\Contracts\Cache\Repository'],
 			'config'         => ['Illuminate\Config\Repository', 'Illuminate\Contracts\Config\Repository'],
 			'cookie'         => ['Illuminate\Cookie\CookieJar', 'Illuminate\Contracts\Cookie\Factory', 'Illuminate\Contracts\Cookie\QueueingFactory'],
-			'exception'      => 'Illuminate\Contracts\Exception\Handler',
 			'encrypter'      => ['Illuminate\Encryption\Encrypter', 'Illuminate\Contracts\Encryption\Encrypter'],
 			'db'             => 'Illuminate\Database\DatabaseManager',
 			'events'         => ['Illuminate\Events\Dispatcher', 'Illuminate\Contracts\Events\Dispatcher'],

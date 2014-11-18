@@ -2,10 +2,9 @@
 
 use Closure;
 use Illuminate\Contracts\Routing\Middleware;
-use Symfony\Component\HttpFoundation\Request;
 use Illuminate\Contracts\Cookie\QueueingFactory as CookieJar;
 
-class AddQueuedCookiesToRequest implements Middleware {
+class AddQueuedCookiesToResponse implements Middleware {
 
 	/**
 	 * The cookie jar instance.
@@ -37,7 +36,9 @@ class AddQueuedCookiesToRequest implements Middleware {
 		$response = $next($request);
 
 		foreach ($this->cookies->getQueuedCookies() as $cookie)
+		{
 			$response->headers->setCookie($cookie);
+		}
 
 		return $response;
 	}
